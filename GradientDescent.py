@@ -1,65 +1,69 @@
 import math
-# todo make this a class
+import sympy as sp
 
-# observed weight, height
-data = [[0.5,1.4],[2.3,1.9],[2.9,3.2]]
-    
 def main():
-    gradientDescent()
+    line = Line()
+    line.gradientDescent()
 
-# predicted height = intercept + slope * weight
-def predictedHeightFunction(weight,intercept = 0, slope = 0.64):
-    return intercept + (slope * weight)
 
-# resididual = observedHeight - predictedheight
-def residual(n,intercept = 0, slope = 0.64):
-    observedWeight = data[n][0]
-    predictedHeight = predictedHeightFunction(observedWeight,intercept)
-    observedHeight = data[n][1]
-    return observedHeight - predictedHeight    
+class Line:
+    def __init__(self, slope = 0.64, intercept = 0.0):
+        self.slope = slope
+        self.intercept = intercept
+        
+        # observed (weight, height) for each data point
+        self.data = [[0.5,1.4],[2.3,1.9],[2.9,3.2]]
 
-def sumSqurareResiduals(intercept = 0, slope = 0.64):
-    residuals = [math.pow(residual(n,intercept),2) for n in range (len(data))]
-    print(f"residuals: {residuals}")
-    print(f"intercept: {intercept}")
-    return round(sum(residuals),2)
+        self.previousStepSize = 1.0
+        self.MIN_STEP_SIZE = 0.01
+        self.LEARNING_RATE = 0.1
+        self.MAX_RECURSIONS = 10
 
-# this function was found, by taking the deravitive of SSR
-# aka derivitive of the loss function
-def derivitiveOfSSR(intercept = 0, slope = 0.64, total = 0):
-    for n in range(len(data)):
-        weight = data[n][0]
-        height = data[n][1]
+    # predicts the height given the the known weight
+    def predictedHeight(self, weight):
+        return self.intercept + (self.slope * weight)    
 
-        # need to learn more to figure out how to generalize this function
-        total += -2*(height - (intercept + slope * weight)) 
-    return round(total,2)
-
-# if too small it will take a long time to learn, if too big may skip over the valley
-def stepSize(slope, learningRate = 0.1):
-    return slope * learningRate
-
-# calculates the new intercept given the old intercept and stepsize
-def newIntercept(oldIntercept, stepSize):
-    return oldIntercept - stepSize
-
-# recursive function that will keep going until it finds the smallest SSR
-# thus the new Intercept will be the value we are looking for 
-def gradientDescent(oldIntercept = 0, previousStep = 1.0, minStepSize = 0.01, maxRecursion = 1000):
-    if (maxRecursion < 0):
-        print("MAX RECURSION")
-        return
-    if (abs(previousStep) < minStepSize):
-        print("MINIMUM STEP SIZE")
-        return
+    # loss function
+    def SSResiduals(self, total = 0):
+        for weight, height in self.data:
+            predictedHeight = self.predictedHeight(weight)
+            total += math.pow(height - predictedHeight,2)
+        return total
     
-    slope = derivitiveOfSSR(oldIntercept)
-    stepSize_ = stepSize(slope)
-    newIntercept_ = newIntercept(oldIntercept, stepSize_)
-    print(f"slope: {slope}")
-    print(f"step size: {stepSize_}")
-    print(f"new intercept: {newIntercept_}")
-    gradientDescent(newIntercept_, stepSize_, minStepSize, maxRecursion - 1)
-    
+    # new shit can't belive how easy it is to implement this    
+    def derivitiveOfSSR(self, total = 0):
+        intercept,slope = sp.symbols('intercept slope')
+        for weight,height in self.data:
+            total += (height - (intercept + (self.slope * weight)))**2
+        fbyIntercept_prime = sp.diff(total, intercept)
+        return fbyIntercept_prime.subs(intercept,self.intercept) # bet that this is the issue
+
+    def print(self):
+        print(f"slope:{self.slope}")
+        print(f"step size:{self.previousStepSize}")
+        print(f"intercept:{self.intercept}\n")
+        print()
+        
+    def gradientDescent(self, totalRecursions = 0):
+        if (totalRecursions > self.MAX_RECURSIONS):
+            print("MAX_RECURSIONS")
+            return
+        if (abs(self.previousStepSize) < self.MIN_STEP_SIZE):
+            print("MINIMUM STEP SIZE")
+            return
+
+        # stores the slope of the ssr
+        slopeOfSSR = self.derivitiveOfSSR()
+        # gets how big the step is
+        stepsize = slopeOfSSR * self.LEARNING_RATE
+        # it will continue one after the min value is hit
+        self.previousStepSize = stepsize
+        # update the new intercept 
+        self.intercept = self.intercept - stepsize
+        self.print()
+        # recurse through adding one to the max calls
+        self.gradientDescent(totalRecursions + 1)
+
+        
 if __name__ == "__main__":
     main()

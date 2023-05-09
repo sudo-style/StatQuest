@@ -1,22 +1,23 @@
 # https://youtu.be/83LYR-1IcjA?t=764
 # Neural Netwroks Pt. 4 - StatQuest
+from ArgMaxSoftMax import softMax
 
 def main():
-    petalWidth = .5
-    septalWidth = .37
+    petalWidth = 0
+    sepalWidth = 1
     
-    n1 = Neuron(1.6,-2.5,0.6)
-    n2 = Neuron(0.7,-1.5,0.4)
+    n1 = Neuron(1.6, -2.5, 0.6)
+    n2 = Neuron(0.7, -1.5, 0.4)
 
-    blue = n1.input(petalWidth,septalWidth)
-    orange = n2.input(petalWidth,septalWidth)
+    blue = n1.input(petalWidth,sepalWidth)
+    orange = n2.input(petalWidth,sepalWidth)
 
     blueReLu = reLu(blue)
     orangeReLu = reLu(orange)
 
-    n3 = Neuron(0, -0.1,1.5)
-    n4 = Neuron(0, 2.4, -5.2)
-    n5 = Neuron(1, -2.2, 3.7)
+    n3 = Neuron(0.0, -0.1,  1.5)
+    n4 = Neuron(0.0,  2.4, -5.2)
+    n5 = Neuron(1.0, -2.2,  3.7)
 
     setosa = n3.input(blueReLu, orangeReLu)
     versicolor = n4.input(blueReLu, orangeReLu)
@@ -25,6 +26,7 @@ def main():
     print(f"setosa: {setosa}")
     print(f"versicolor: {versicolor}")
     print(f"virginica: {virginica}")
+    print(softMax(setosa,versicolor,virginica))
 
 class Neuron:
     def __init__(self, bias, *weights):
